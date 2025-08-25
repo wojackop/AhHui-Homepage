@@ -1,18 +1,16 @@
 # .github/workflows/auto-bing.yml
-name: Update Bing & Deploy Minimal Site to gh-pages
+name: Update Bing & Deploy to gh-pages
 
 on:
   workflow_dispatch:
   schedule:
-    - cron: "0 1 * * *"  # 每天 01:00 UTC
+    - cron: "0 1 * * *"  # 每天 01:00 UTC（北京时间 09:00）
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
     permissions:
-      contents: read
-      pages: write
-      id-token: write
+      contents: write  # 允许写入分支
 
     steps:
       # 1. 检出 main 分支代码
@@ -59,13 +57,24 @@ jobs:
 
           touch deploy/.nojekyll
 
-      # 6. 配置 GitHub Pages（关键修复）
-      - name: Setup GitHub Pages
-        uses: actions/configure-pages@v5
-        with:
-          enablement: true
-          build-output: deploy
+      # 6. 配置 Git 提交者
+      - name: Configure Git
+        run: |
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
 
-      # 7. 部署到 gh-pages
-      - name: Deploy to GitHub Pages
-        uses: actions/deploy-pages@v4
+      # 7. 切换到 gh-pages 分支并推送
+      - name: Deploy to gh-pages
+        run: |
+          # 切换到 gh-pages 分支（如果不存在则创建）
+          git switch -C gh-pages
+
+          # 复制 deploy 目录内容到根目录
+          cp -r deploy/* .
+
+          # 添加并提交
+          git add .
+          git commit -m "[skip ci] 🖼️ Auto-update Bing images and deploy"
+
+          # 推送到 gh-pages 分支（使用 GITHUB_TOKEN）
+          git push "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git" gh-pages
