@@ -1,5 +1,5 @@
 # .github/workflows/auto-bing.yml
-name: Update Bing & Deploy Minimal Site to gh-pages
+name: Update Bing & Deploy to gh-pages
 
 on:
   workflow_dispatch:                  # 手动触发
@@ -38,10 +38,10 @@ jobs:
           fi
           echo "✅ Successfully generated images.json"
 
-      # 5. 创建最小化部署目录（只包含目标文件）
+      # 5. 创建最小化部署目录
       - name: Prepare deploy directory
         run: |
-          # 清理并创建 deploy 目录
+          # 清理旧目录
           rm -rf deploy
           mkdir -p deploy/{assets/css,assets/fonts,assets/img,assets/js,assets/json}
 
@@ -51,56 +51,55 @@ jobs:
           cp favicon.ico deploy/
           cp apple-touch-icon.png deploy/
 
-          # CSS
           cp assets/css/*.css deploy/assets/css/
-
-          # Fonts
           cp assets/fonts/* deploy/assets/fonts/
-
-          # Image: 只复制 logo.png
           cp assets/img/logo.png deploy/assets/img/
-
-          # JS: 只复制 main.js 和 fireworks.js，不复制 bing.js
           cp assets/js/main.js deploy/assets/js/
           cp assets/js/fireworks.js deploy/assets/js/
-
-          # JSON: 包含已更新的 images.json
           cp assets/json/images.json deploy/assets/json/
 
-          # 防止 Jekyll 处理
+          # 防止 GitHub Pages 启用 Jekyll
           touch deploy/.nojekyll
 
-          # 检查输出结构
+          # 验证输出结构
           echo "📄 Final deploy structure:"
           find deploy -type f | sort
 
-      # 6. 配置 Git 用户
+      # 6. 配置 Git 提交者
       - name: Configure Git
         run: |
           git config --local user.email "github-actions[bot]@users.noreply.github.com"
           git config --local user.name "github-actions[bot]"
 
-      # 7. 部署到 gh-pages 分支（干净替换）
+      # 7. 部署到 gh-pages 分支（从零创建）
       - name: Deploy to gh-pages
         run: |
-          # 切换到 gh-pages 分支（如果不存在则创建）
+          # 创建或切换到 gh-pages 分支
           git switch -C gh-pages
 
-          # 清理当前所有文件（保留 .git）
+          # 彻底清理当前所有文件（保留 .git）
           git rm -r --cached . 2>/dev/null || true
-          rm -rf * .[^.]* 2>/dev/null || true  # 删除隐藏文件如 .nojekyll
+          rm -rf * .[^.]* 2>/dev/null || true  # 删除所有文件和隐藏文件（除 .git）
 
-          # 复制 deploy 内容到根目录
+          # 检查 deploy 目录是否存在
+          if [ ! -d "deploy" ]; then
+            echo "❌ Error: deploy directory does not exist!"
+            exit 1
+          fi
+
+          # 将 deploy 内容复制到根目录
           cp -r deploy/* .
-          rm -rf deploy  # 删除 deploy 文件夹本身
 
-          # 添加所有文件（包括隐藏文件）
+          # 删除 deploy 文件夹本身
+          rm -rf deploy
+
+          # 添加所有文件（包括 .nojekyll）
           git add .
 
-          # 提交（使用 [skip ci] 防止循环）
+          # 提交更改（使用 [skip ci] 防止循环触发）
           git commit -m "[skip ci] 🖼️ Auto-update Bing images and deploy"
 
-          # 推送到 gh-pages 分支
+          # 推送到远程 gh-pages 分支（自动创建）
           git push "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git" gh-pages
 
       # 8. （可选）清理旧 workflow runs
