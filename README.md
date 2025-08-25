@@ -9,13 +9,15 @@
 
 <p style="text-align: center; margin: 0; padding: 0;">
   <img src="https://bing.gyhwd.top/daily.webp" alt="Daily Bing Wallpaper" 
-       style="width: 100%; max-width: 100%; height: auto;" />
+       style="width: 100%; max-width: 80%; height: auto;" />
 </p>
 
+<p style="text-align: center; margin: 0; padding: 0;">
+  <img src="./assets/img/home.gif" alt="Daily Bing Wallpaper" 
+       style="width: 100%; max-width: 80%; height: auto;" />
+</p>
 
-![home](./assets/img/home.gif)
-
-一个简洁、美观的个人主页，灵感源自 [dmego](https://github.com/dmego) 的 [dmego-home-page](https://github.com/dmego/dmego-home-page) 项目。通过 GitHub Actions 实现每日自动更新必应（Bing）高清壁纸。
+一个简洁、美观的个人主页，灵感源自 [dmego](https://github.com/dmego) 的 [dmego-home-page](https://github.com/dmego/dmego-home-page) 项目。基于 GitHub Actions，每日上午 9 点（北京时间）自动抓取必应（Bing）高清壁纸，生成 `assets/json/images.json` 文件，由 `index.html` 通过 `JSONP` 方式加载并执行 `getBingImages` 函数，动态设置最新背景图，最后将整理好的静态资源发布至 `gh-pages` 分支，通过 GitHub Pages 实现自动部署与展示。
 
 ## ✨ 功能亮点
 
@@ -37,18 +39,13 @@
 │   │   ├─📄 onlinewebfonts.css       # 在线字体样式表
 │   │   └─📄 vno.css                  # 主题样式表
 │   ├─📁 fonts/
-│   │   ├─📄 d571b52b60b5617399ce8eab62bf3eb3.eot     # 字体文件 (EOT格式)
-│   │   ├─📄 d571b52b60b5617399ce8eab62bf3eb3.svg     # 字体文件 (SVG格式)
-│   │   ├─📄 d571b52b60b5617399ce8eab62bf3eb3.ttf     # 字体文件 (TTF格式)
-│   │   ├─📄 d571b52b60b5617399ce8eab62bf3eb3.woff    # 字体文件 (WOFF格式)
-│   │   └─📄 d571b52b60b5617399ce8eab62bf3eb3.woff2   # 字体文件 (WOFF2格式，压缩率更高)
 │   ├─📁 img/
 │   │   ├─📁 action/
 │   │   ├─📄 home.gif                 # 首页动画GIF
 │   │   └─📄 logo.png                 # 主要Logo图片
 │   ├─📁 js/
 │   │   ├─📄 bing.js                  # 获取每日Bing壁纸URL的Node.js脚本
-│   │   ├─📄 djtx.js                  # 鼠标点击爆炸特效脚本
+│   │   ├─📄 fireworks.js             # 鼠标点击爆炸特效脚本
 │   │   └─📄 main.js                  # 主要JavaScript脚本（包含getBingImages函数定义）
 │   └─📁 json/
 │       └─📄 images.json              # 存储每日Bing壁纸URL的JSONP文件
@@ -77,7 +74,7 @@
   -  在 `Secrets` 栏中填写第一步生成的 `Token` 值
 - 详细配置步骤图可以参考《[GitHub Action 配置详细步骤](./ActionNotes.md)》文档
 
-### 🎀 NPM 包发布与使用笔记
+### 🎀 NPM 包发布与使用
 
 将网站的静态资源（CSS, JS, 图片, 字体等）打包发布为一个 NPM 包，使用 UNPKG 作为资源文件的 CDN。以下是详细步骤：
 
@@ -159,28 +156,16 @@ npm cache clean --force     # 清理 npm 缓存
 
 ## ⏱️ 自动化工作流
 
-```mermaid
-graph TD
-    A[GitHub Action 每日定时运行] --> B[执行 bing.js 脚本]
-    B --> C[从 cn.bing.com API 获取最新壁纸]
-    C --> D[生成或更新 assets/json/images.json]
-    D --> E[提交并推送到 gh-pages 分支]
-    E --> F[GitHub Pages 自动部署]
-    F --> G[您的网页加载最新壁纸]
-```
-
 1. **定时触发**：GitHub Actions 每天在设定时间自动触发。
 2. **获取数据**：`bing.js` 脚本调用 Bing API，获取包含最近 8 天壁纸 URL 的 JSON 数据。
 3. **生成文件**：脚本将数据转换为 `getBingImages([...])` 格式的 JSONP，并写入 `assets/json/images.json` 文件。
 4. **自动部署**：工作流将更新后的 `images.json` 文件提交并推送到 `gh-pages` 分支。
-5. **网页加载**：您的 `index.html` 通过 `<script>` 标签加载 `images.json`，执行 `getBingImages` 函数，从而设置最新的背景图片。
+5. **网页加载**：`index.html` 通过 `<script>` 标签加载 `images.json`，执行 `getBingImages` 函数，从而设置最新的背景图片。
 
 
 ## 📝 更新记录
 
 - **2023-08-28**: 将壁纸地址从 `www.bing.com` 换成 `cn.bing.com`，确保在中国大陆也能正常访问。
-- **2023-04-12**: 移除 jQuery 依赖，改用原生 JavaScript，提升性能。
-- **2023-02-27**: 添加《GitHub Action 配置详细步骤》文档。
 - **2022-06-10**: 发布 NPM 包，使用 UNPKG 作为资源文件的 CDN。
 
 ## 🤝 致谢与参考
