@@ -1,16 +1,16 @@
 # .github/workflows/auto-bing.yml
-name: Update Bing & Deploy to gh-pages
+name: Update Bing & Deploy Minimal Site to gh-pages
 
 on:
-  workflow_dispatch:
+  workflow_dispatch:                  # 手动触发
   schedule:
-    - cron: "0 1 * * *"  # 每天 01:00 UTC（北京时间 09:00）
+    - cron: "0 1 * * *"              # 每天 01:00 UTC（北京时间 09:00）
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
     permissions:
-      contents: write  # 允许写入分支
+      contents: write                # 允许写入分支
 
     steps:
       # 1. 检出 main 分支代码
@@ -25,11 +25,11 @@ jobs:
         with:
           node-version: '20.x'
 
-      # 3. 运行 bing.js 生成 images.json
+      # 3. 运行 bing.js 生成最新的 images.json
       - name: Generate Bing images.json
         run: node ./assets/js/bing.js
 
-      # 4. 验证文件存在
+      # 4. 验证生成结果
       - name: Verify images.json
         run: |
           if [ ! -f "assets/json/images.json" ]; then
@@ -38,43 +38,74 @@ jobs:
           fi
           echo "✅ Successfully generated images.json"
 
-      # 5. 创建最小化部署目录
+      # 5. 创建最小化部署目录（只包含目标文件）
       - name: Prepare deploy directory
         run: |
+          # 清理并创建 deploy 目录
+          rm -rf deploy
           mkdir -p deploy/{assets/css,assets/fonts,assets/img,assets/js,assets/json}
 
+          # 复制指定文件
           cp index.html deploy/
           cp 404.html deploy/ || true
           cp favicon.ico deploy/
           cp apple-touch-icon.png deploy/
 
+          # CSS
           cp assets/css/*.css deploy/assets/css/
+
+          # Fonts
           cp assets/fonts/* deploy/assets/fonts/
+
+          # Image: 只复制 logo.png
           cp assets/img/logo.png deploy/assets/img/
+
+          # JS: 只复制 main.js 和 fireworks.js，不复制 bing.js
           cp assets/js/main.js deploy/assets/js/
           cp assets/js/fireworks.js deploy/assets/js/
+
+          # JSON: 包含已更新的 images.json
           cp assets/json/images.json deploy/assets/json/
 
+          # 防止 Jekyll 处理
           touch deploy/.nojekyll
 
-      # 6. 配置 Git 提交者
+          # 检查输出结构
+          echo "📄 Final deploy structure:"
+          find deploy -type f | sort
+
+      # 6. 配置 Git 用户
       - name: Configure Git
         run: |
           git config --local user.email "github-actions[bot]@users.noreply.github.com"
           git config --local user.name "github-actions[bot]"
 
-      # 7. 切换到 gh-pages 分支并推送
+      # 7. 部署到 gh-pages 分支（干净替换）
       - name: Deploy to gh-pages
         run: |
           # 切换到 gh-pages 分支（如果不存在则创建）
           git switch -C gh-pages
 
-          # 复制 deploy 目录内容到根目录
-          cp -r deploy/* .
+          # 清理当前所有文件（保留 .git）
+          git rm -r --cached . 2>/dev/null || true
+          rm -rf * .[^.]* 2>/dev/null || true  # 删除隐藏文件如 .nojekyll
 
-          # 添加并提交
+          # 复制 deploy 内容到根目录
+          cp -r deploy/* .
+          rm -rf deploy  # 删除 deploy 文件夹本身
+
+          # 添加所有文件（包括隐藏文件）
           git add .
+
+          # 提交（使用 [skip ci] 防止循环）
           git commit -m "[skip ci] 🖼️ Auto-update Bing images and deploy"
 
-          # 推送到 gh-pages 分支（使用 GITHUB_TOKEN）
+          # 推送到 gh-pages 分支
           git push "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git" gh-pages
+
+      # 8. （可选）清理旧 workflow runs
+      - name: Cleanup old workflow runs
+        uses: Mattraks/delete-workflow-runs@v2
+        with:
+          retain_days: 30
+          keep_minimum_runs: 5
