@@ -19,5 +19,8 @@ analytics*
 .well-known@
 .well-known*
 
+# 临时工作流文件（可选）
+auto-bing-old.yml
+
 # 忽略自动生成的 JSON 文件
 assets/json/images.json
