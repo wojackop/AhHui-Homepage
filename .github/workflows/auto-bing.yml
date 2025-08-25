@@ -2,15 +2,15 @@
 name: Update Bing & Deploy to gh-pages
 
 on:
-  workflow_dispatch:
+  workflow_dispatch:                  # 手动触发
   schedule:
-    - cron: "0 1 * * *"  # 每天 01:00 UTC（北京时间 09:00）
+    - cron: "0 1 * * *"              # 每天 01:00 UTC（北京时间 09:00）
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
     permissions:
-      contents: write
+      contents: write                # 允许写入分支
 
     steps:
       # 1. 检出 main 分支代码
@@ -29,14 +29,33 @@ jobs:
       - name: Generate Bing images.json
         run: node ./assets/js/bing.js
 
-      # 4. 验证生成结果
-      - name: Verify images.json
+      # 4. 调试：检查当前文件结构和关键文件
+      - name: Debug: List current directory
         run: |
-          if [ ! -f "assets/json/images.json" ]; then
-            echo "❌ Error: images.json not generated!"
+          echo "📂 Current directory structure:"
+          find . -type f | grep -v "\.git" | sort
+
+          echo "📄 Checking critical files:"
+          if [ -f "assets/json/images.json" ]; then
+            echo "✅ Found: assets/json/images.json"
+            ls -la assets/json/images.json
+          else
+            echo "❌ Missing: assets/json/images.json"
             exit 1
           fi
-          echo "✅ Successfully generated images.json"
+
+          if [ -f "index.html" ]; then
+            echo "✅ Found: index.html"
+          else
+            echo "❌ Missing: index.html"
+            exit 1
+          fi
+
+          if [ -f "assets/css/vno.css" ]; then
+            echo "✅ Found: assets/css/vno.css"
+          else
+            echo "❌ Missing: assets/css/vno.css (or check spelling)"
+          fi
 
       # 5. 创建静态资源目录（使用 static/）
       - name: Prepare static directory
@@ -47,7 +66,7 @@ jobs:
 
           # 复制指定文件
           cp index.html static/
-          cp 404.html static/ || true
+          cp 404.html static/ || echo "⚠️ 404.html not found, skipping"
           cp favicon.ico static/
           cp apple-touch-icon.png static/
 
@@ -71,15 +90,15 @@ jobs:
           git config --local user.email "github-actions[bot]@users.noreply.github.com"
           git config --local user.name "github-actions[bot]"
 
-      # 7. 部署到 gh-pages 分支
+      # 7. 部署到 gh-pages 分支（从零创建）
       - name: Deploy to gh-pages
         run: |
-          # 切换到 gh-pages 分支（不存在则创建）
+          # 创建或切换到 gh-pages 分支
           git switch -C gh-pages
 
           # 彻底清理当前所有文件（保留 .git）
           git rm -r --cached . 2>/dev/null || true
-          rm -rf * .[^.]* 2>/dev/null || true
+          rm -rf * .[^.]* 2>/dev/null || true  # 删除所有文件和隐藏文件（除 .git）
 
           # 检查 static 目录是否存在
           if [ ! -d "static" ]; then
@@ -93,13 +112,13 @@ jobs:
           # 删除 static 文件夹本身
           rm -rf static
 
-          # 添加所有文件
+          # 添加所有文件（包括 .nojekyll）
           git add .
 
-          # 提交（跳过 CI，防止循环）
+          # 提交更改（使用 [skip ci] 防止循环触发）
           git commit -m "[skip ci] 🖼️ Auto-update Bing images and deploy"
 
-          # 推送到 gh-pages
+          # 推送到远程 gh-pages 分支（自动创建）
           git push "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git" gh-pages
 
       # 8. （可选）清理旧 workflow runs
