@@ -2,9 +2,9 @@
 name: Update Bing & Deploy Minimal Site to gh-pages
 
 on:
-  workflow_dispatch:                  # 手动触发
+  workflow_dispatch:
   schedule:
-    - cron: "0 1 * * *"              # 每天 01:00 UTC（北京时间 09:00）
+    - cron: "0 1 * * *"  # 每天 01:00 UTC
 
 jobs:
   deploy:
@@ -27,11 +27,11 @@ jobs:
         with:
           node-version: '20.x'
 
-      # 3. 运行 bing.js 生成最新的 images.json
+      # 3. 运行 bing.js 生成 images.json
       - name: Generate Bing images.json
         run: node ./assets/js/bing.js
 
-      # 4. 验证生成结果
+      # 4. 验证文件存在
       - name: Verify images.json
         run: |
           if [ ! -f "assets/json/images.json" ]; then
@@ -43,44 +43,29 @@ jobs:
       # 5. 创建最小化部署目录
       - name: Prepare deploy directory
         run: |
-          # 创建目标目录
           mkdir -p deploy/{assets/css,assets/fonts,assets/img,assets/js,assets/json}
 
-          # 复制指定文件
           cp index.html deploy/
-          cp 404.html deploy/  # 如果存在
+          cp 404.html deploy/ || true
           cp favicon.ico deploy/
           cp apple-touch-icon.png deploy/
 
-          # CSS
           cp assets/css/*.css deploy/assets/css/
-
-          # Fonts
           cp assets/fonts/* deploy/assets/fonts/
-
-          # Image: 只复制 logo.png
           cp assets/img/logo.png deploy/assets/img/
-
-          # JS: 只复制 main.js 和 fireworks.js，不复制 bing.js
           cp assets/js/main.js deploy/assets/js/
           cp assets/js/fireworks.js deploy/assets/js/
-
-          # JSON: 包含已更新的 images.json
           cp assets/json/images.json deploy/assets/json/
 
-          # 防止 Jekyll 处理
           touch deploy/.nojekyll
 
-          # 检查结果
-          echo "📄 Deploy directory structure:"
-          find deploy -type f | sort
-
-      # 6. 配置 GitHub Pages
+      # 6. 配置 GitHub Pages（关键修复）
       - name: Setup GitHub Pages
         uses: actions/configure-pages@v5
         with:
+          enablement: true
           build-output: deploy
 
-      # 7. 部署到 gh-pages 分支（无需 token）
+      # 7. 部署到 gh-pages
       - name: Deploy to GitHub Pages
         uses: actions/deploy-pages@v4
