@@ -4,53 +4,35 @@ name: Update Bing & Deploy to gh-pages
 on:
   workflow_dispatch:
   schedule:
-    - cron: "0 1 * * *"  # 每天 01:00 UTC
+    - cron: "0 1 * * *"  # 每天 01:00 UTC（北京时间 09:00）
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    permissions:
-      contents: write
 
     steps:
+      # 1. 检出 main 分支代码
       - name: Checkout main branch
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
 
+      # 2. 设置 Node.js 环境
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '20.x'
 
+      # 3. 运行 bing.js 生成 images.json
       - name: Generate Bing images.json
         run: node ./assets/js/bing.js
 
-      - name: Debug: Check required files
-        run: |
-          echo "📂 Current directory structure:"
-          find . -type f | grep -v "\.git" | sort
-
-          echo "📄 Checking critical files:"
-          if [ ! -f "assets/json/images.json" ]; then
-            echo "❌ Error: assets/json/images.json not found!"
-            exit 1
-          fi
-
-          if [ ! -f "index.html" ]; then
-            echo "❌ Error: index.html not found!"
-            exit 1
-          fi
-
-          if [ ! -f "assets/css/vno.css" ]; then
-            echo "⚠️ Warning: assets/css/vno.css not found (check spelling)"
-          fi
-
+      # 4. 创建 static 目录并复制指定文件
       - name: Prepare static directory
         run: |
+          # 清理旧 static
           rm -rf static
           mkdir -p static/{assets/css,assets/fonts,assets/img,assets/js,assets/json}
 
+          # 复制指定文件
           cp index.html static/
           cp 404.html static/ || true
           cp favicon.ico static/
@@ -63,38 +45,32 @@ jobs:
           cp assets/js/fireworks.js static/assets/js/
           cp assets/json/images.json static/assets/json/
 
+          # 防止 Jekyll 处理
           touch static/.nojekyll
 
+          # 查看结果
           echo "📄 Final static structure:"
           find static -type f | sort
 
-      - name: Configure Git
+      # 5. 配置 Git
+      - name: Configure git
         run: |
-          git config --local user.email "github-actions[bot]@users.noreply.github.com"
-          git config --local user.name "github-actions[bot]"
+          git config --global user.email "actions@github.com"
+          git config --global user.name "GitHub Actions"
 
-      - name: Deploy to gh-pages
+      # 6. 部署到 gh-pages 分支
+      - name: Commit and push to gh-pages
         run: |
-          git switch -C gh-pages
-
-          git rm -r --cached . 2>/dev/null || true
-          rm -rf * .[^.]* 2>/dev/null || true
-
-          if [ ! -d "static" ]; then
-            echo "❌ Error: static directory does not exist!"
-            exit 1
-          fi
-
-          cp -r static/* .
-          rm -rf static
-
+          cd static
+          git init
+          git checkout -b gh-pages
           git add .
-          git commit -m "[skip ci] 🖼️ Auto-update Bing images and deploy"
+          git commit -m "🖼️ Auto-update Bing images and deploy"
+          git push --force "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git" gh-pages
 
-          git push "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git" gh-pages
-
-      - name: Cleanup old workflow runs
+      # 7. （可选）清理旧 workflow runs
+      - name: Delete Workflow Runs
         uses: Mattraks/delete-workflow-runs@v2
         with:
           retain_days: 30
-          keep_minimum_runs: 5
+          keep_minimum_runs: 6
