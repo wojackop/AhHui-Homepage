@@ -2,71 +2,57 @@
 name: Update Bing & Deploy to gh-pages
 
 on:
-  workflow_dispatch:                  # 手动触发
+  workflow_dispatch:
   schedule:
-    - cron: "0 1 * * *"              # 每天 01:00 UTC（北京时间 09:00）
+    - cron: "0 1 * * *"  # 每天 01:00 UTC
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
     permissions:
-      contents: write                # 允许写入分支
+      contents: write
 
     steps:
-      # 1. 检出 main 分支代码
       - name: Checkout main branch
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      # 2. 设置 Node.js 环境
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '20.x'
 
-      # 3. 运行 bing.js 生成最新的 images.json
       - name: Generate Bing images.json
         run: node ./assets/js/bing.js
 
-      # 4. 调试：检查当前文件结构和关键文件
-      - name: Debug: List current directory
+      - name: Debug: Check required files
         run: |
           echo "📂 Current directory structure:"
           find . -type f | grep -v "\.git" | sort
 
           echo "📄 Checking critical files:"
-          if [ -f "assets/json/images.json" ]; then
-            echo "✅ Found: assets/json/images.json"
-            ls -la assets/json/images.json
-          else
-            echo "❌ Missing: assets/json/images.json"
+          if [ ! -f "assets/json/images.json" ]; then
+            echo "❌ Error: assets/json/images.json not found!"
             exit 1
           fi
 
-          if [ -f "index.html" ]; then
-            echo "✅ Found: index.html"
-          else
-            echo "❌ Missing: index.html"
+          if [ ! -f "index.html" ]; then
+            echo "❌ Error: index.html not found!"
             exit 1
           fi
 
-          if [ -f "assets/css/vno.css" ]; then
-            echo "✅ Found: assets/css/vno.css"
-          else
-            echo "❌ Missing: assets/css/vno.css (or check spelling)"
+          if [ ! -f "assets/css/vno.css" ]; then
+            echo "⚠️ Warning: assets/css/vno.css not found (check spelling)"
           fi
 
-      # 5. 创建静态资源目录（使用 static/）
       - name: Prepare static directory
         run: |
-          # 清理旧目录
           rm -rf static
           mkdir -p static/{assets/css,assets/fonts,assets/img,assets/js,assets/json}
 
-          # 复制指定文件
           cp index.html static/
-          cp 404.html static/ || echo "⚠️ 404.html not found, skipping"
+          cp 404.html static/ || true
           cp favicon.ico static/
           cp apple-touch-icon.png static/
 
@@ -77,51 +63,36 @@ jobs:
           cp assets/js/fireworks.js static/assets/js/
           cp assets/json/images.json static/assets/json/
 
-          # 防止 GitHub Pages 启用 Jekyll
           touch static/.nojekyll
 
-          # 验证输出结构
           echo "📄 Final static structure:"
           find static -type f | sort
 
-      # 6. 配置 Git 提交者
       - name: Configure Git
         run: |
           git config --local user.email "github-actions[bot]@users.noreply.github.com"
           git config --local user.name "github-actions[bot]"
 
-      # 7. 部署到 gh-pages 分支（从零创建）
       - name: Deploy to gh-pages
         run: |
-          # 创建或切换到 gh-pages 分支
           git switch -C gh-pages
 
-          # 彻底清理当前所有文件（保留 .git）
           git rm -r --cached . 2>/dev/null || true
-          rm -rf * .[^.]* 2>/dev/null || true  # 删除所有文件和隐藏文件（除 .git）
+          rm -rf * .[^.]* 2>/dev/null || true
 
-          # 检查 static 目录是否存在
           if [ ! -d "static" ]; then
             echo "❌ Error: static directory does not exist!"
             exit 1
           fi
 
-          # 将 static 内容复制到根目录
           cp -r static/* .
-
-          # 删除 static 文件夹本身
           rm -rf static
 
-          # 添加所有文件（包括 .nojekyll）
           git add .
-
-          # 提交更改（使用 [skip ci] 防止循环触发）
           git commit -m "[skip ci] 🖼️ Auto-update Bing images and deploy"
 
-          # 推送到远程 gh-pages 分支（自动创建）
           git push "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git" gh-pages
 
-      # 8. （可选）清理旧 workflow runs
       - name: Cleanup old workflow runs
         uses: Mattraks/delete-workflow-runs@v2
         with:
