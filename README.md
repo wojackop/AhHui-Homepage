@@ -156,11 +156,12 @@ npm cache clean --force     # 清理 npm 缓存
 
 ## ⏱️ 自动化工作流
 
-1. **定时触发**：GitHub Actions 每天在设定时间自动触发。
-2. **获取数据**：`bing.js` 脚本调用 Bing API，获取包含最近 8 天壁纸 URL 的 JSON 数据。
-3. **生成文件**：脚本将数据转换为 `getBingImages([...])` 格式的 JSONP，并写入 `assets/json/images.json` 文件。
-4. **自动部署**：工作流将更新后的 `images.json` 文件提交并推送到 `gh-pages` 分支。
-5. **网页加载**：`index.html` 通过 `<script>` 标签加载 `images.json`，执行 `getBingImages` 函数，从而设置最新的背景图片。
+1. **触发运行**：每天 01:00 UTC（北京时间 09:00）自动执行，支持手动触发。
+2. **获取壁纸数据**：`bing.js` 调用 Bing API，获取最近 8 天的高清壁纸信息。
+3. **生成 JSONP 文件**：将数据转换为 `getBingImages([...])` 格式，写入 `assets/json/images.json`。
+4. **构建静态资源并部署到 gh-pages**：在 `static/` 中初始化 Git，创建 `gh-pages` 分支，强制推送以更新 GitHub Pages。
+5. **清理历史记录**：自动删除 14 天前的 workflow 运行记录，保留至少 3 次。
+6. **前端加载**：`index.html` 加载 `images.json`，执行 `getBingImages` 函数，设置最新背景图。
 
 
 ## 📝 更新记录
