@@ -8,11 +8,11 @@ on:
   # 每天凌晨1点 (UTC时间) 自动运行
   schedule:
     - cron: "0 1 * * *"
-  # 当向 gh-pages 分支推送或创建 Pull Request 时也触发
+  # 当向 main 分支推送或创建 Pull Request 时也触发
   push:
-    branches: [ gh-pages ]
+    branches: [ main ]
   pull_request:
-    branches: [ gh-pages ]
+    branches: [ main ]
 
 jobs:
   build:
@@ -58,6 +58,6 @@ jobs:
 
     # 6. 推送更改到远程仓库
     # 使用 x-access-token 方式，直接将 GH_TOKEN 作为密码，避免凭据冲突
-    - name: Push changes to gh-pages
+    - name: Push changes to main
       run: |
         git push "https://x-access-token:${{ secrets.GH_TOKEN }}@github.com/${{ github.repository }}.git" HEAD:${{ github.ref }}
