@@ -1,63 +1,86 @@
-# auto-bing.yml
-name: Auto Update Bing Images CI
+# .github/workflows/auto-bing.yml
+name: Update Bing & Deploy Minimal Site to gh-pages
 
-# 定义触发此工作流的事件
 on:
-  # 允许在 GitHub Actions 界面手动触发
-  workflow_dispatch:
-  # 每天凌晨1点 (UTC时间) 自动运行
+  workflow_dispatch:                  # 手动触发
   schedule:
-    - cron: "0 1 * * *"
-  # 当向 main 分支推送或创建 Pull Request 时也触发
-  push:
-    branches: [ main ]
-  pull_request:
-    branches: [ main ]
+    - cron: "0 1 * * *"              # 每天 01:00 UTC（北京时间 09:00）
 
 jobs:
-  build:
-    # 指定运行环境
+  deploy:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
 
     steps:
-    # 1. 检出代码
-    - name: Checkout repository
-      uses: actions/checkout@v4
-      with:
-        # 关键：允许后续步骤进行推送
-        persist-credentials: false
-        # 获取完整的 Git 历史记录
-        fetch-depth: 0
+      # 1. 检出 main 分支代码
+      - name: Checkout main branch
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
-    # 2. 设置 Node.js 环境
-    - name: Setup Node.js
-      uses: actions/setup-node@v4
-      with:
-        node-version: '20.x'
+      # 2. 设置 Node.js 环境
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20.x'
 
-    # 3. 运行脚本，获取 Bing 壁纸 URL 并更新本地文件
-    - name: Update Bing images
-      run: node ./assets/js/bing.js
+      # 3. 运行 bing.js 生成最新的 images.json
+      - name: Generate Bing images.json
+        run: node ./assets/js/bing.js
 
-    # 4. 配置 Git 提交者信息
-    - name: Configure Git user
-      run: |
-        git config --local user.email "github-actions[bot]@users.noreply.github.com"
-        git config --local user.name "github-actions[bot]"
+      # 4. 验证生成结果
+      - name: Verify images.json
+        run: |
+          if [ ! -f "assets/json/images.json" ]; then
+            echo "❌ Error: images.json not generated!"
+            exit 1
+          fi
+          echo "✅ Successfully generated images.json"
 
-    # 5. 添加并提交更改
-    - name: Commit changes
-      run: |
-        # 检查是否有文件被修改
-        if ! git diff --quiet; then
-          git add ./assets/json/images.json
-          git commit -m "[CI] Auto-update Bing images.json"
-        else
-          echo "No changes to images.json. Nothing to commit."
-        fi
+      # 5. 创建最小化部署目录
+      - name: Prepare deploy directory
+        run: |
+          # 创建目标目录
+          mkdir -p deploy/{assets/css,assets/fonts,assets/img,assets/js,assets/json}
 
-    # 6. 推送更改到远程仓库
-    # 使用 x-access-token 方式，直接将 GH_TOKEN 作为密码，避免凭据冲突
-    - name: Push changes to main
-      run: |
-        git push "https://x-access-token:${{ secrets.GH_TOKEN }}@github.com/${{ github.repository }}.git" HEAD:${{ github.ref }}
+          # 复制指定文件
+          cp index.html deploy/
+          cp 404.html deploy/  # 如果存在
+          cp favicon.ico deploy/
+          cp apple-touch-icon.png deploy/
+
+          # CSS
+          cp assets/css/*.css deploy/assets/css/
+
+          # Fonts
+          cp assets/fonts/* deploy/assets/fonts/
+
+          # Image: 只复制 logo.png
+          cp assets/img/logo.png deploy/assets/img/
+
+          # JS: 只复制 main.js 和 fireworks.js，不复制 bing.js
+          cp assets/js/main.js deploy/assets/js/
+          cp assets/js/fireworks.js deploy/assets/js/
+
+          # JSON: 包含已更新的 images.json
+          cp assets/json/images.json deploy/assets/json/
+
+          # 防止 Jekyll 处理
+          touch deploy/.nojekyll
+
+          # 检查结果
+          echo "📄 Deploy directory structure:"
+          find deploy -type f | sort
+
+      # 6. 配置 GitHub Pages
+      - name: Setup GitHub Pages
+        uses: actions/configure-pages@v5
+        with:
+          build-output: deploy
+
+      # 7. 部署到 gh-pages 分支（无需 token）
+      - name: Deploy to GitHub Pages
+        uses: actions/deploy-pages@v4
