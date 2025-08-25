@@ -1,0 +1,33 @@
+{
+  "name": "@wojackop/homepage",
+  "version": "1.0.7",
+  "description": "A personal homepage for AhHui, featuring daily Bing wallpapers and dynamic effects.",
+  "main": "index.html",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/wojackop/home.github.io.git"
+  },
+  "keywords": [
+    "personal",
+    "AhHui",
+    "homepage",
+    "bing"
+  ],
+  "author": "AhHui",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/wojackop/home.github.io/issues"
+  },
+  "homepage": "https://wojackop.github.io/home.github.io/",
+  "files": [
+    "assets/css/",
+    "assets/fonts/",
+    "assets/img/",
+    "assets/js/",
+    "favicon.ico",
+    "apple-touch-icon.png"
+  ]
+}

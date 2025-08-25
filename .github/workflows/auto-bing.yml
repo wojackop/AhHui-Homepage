@@ -1,0 +1,63 @@
+# auto-bing.yml
+name: Auto Update Bing Images CI
+
+# 定义触发此工作流的事件
+on:
+  # 允许在 GitHub Actions 界面手动触发
+  workflow_dispatch:
+  # 每天凌晨1点 (UTC时间) 自动运行
+  schedule:
+    - cron: "0 1 * * *"
+  # 当向 gh-pages 分支推送或创建 Pull Request 时也触发
+  push:
+    branches: [ gh-pages ]
+  pull_request:
+    branches: [ gh-pages ]
+
+jobs:
+  build:
+    # 指定运行环境
+    runs-on: ubuntu-latest
+
+    steps:
+    # 1. 检出代码
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      with:
+        # 关键：允许后续步骤进行推送
+        persist-credentials: false
+        # 获取完整的 Git 历史记录
+        fetch-depth: 0
+
+    # 2. 设置 Node.js 环境
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20.x'
+
+    # 3. 运行脚本，获取 Bing 壁纸 URL 并更新本地文件
+    - name: Update Bing images
+      run: node ./assets/js/bing.js
+
+    # 4. 配置 Git 提交者信息
+    - name: Configure Git user
+      run: |
+        git config --local user.email "github-actions[bot]@users.noreply.github.com"
+        git config --local user.name "github-actions[bot]"
+
+    # 5. 添加并提交更改
+    - name: Commit changes
+      run: |
+        # 检查是否有文件被修改
+        if ! git diff --quiet; then
+          git add ./assets/json/images.json
+          git commit -m "[CI] Auto-update Bing images.json"
+        else
+          echo "No changes to images.json. Nothing to commit."
+        fi
+
+    # 6. 推送更改到远程仓库
+    # 使用 x-access-token 方式，直接将 GH_TOKEN 作为密码，避免凭据冲突
+    - name: Push changes to gh-pages
+      run: |
+        git push "https://x-access-token:${{ secrets.GH_TOKEN }}@github.com/${{ github.repository }}.git" HEAD:${{ github.ref }}
