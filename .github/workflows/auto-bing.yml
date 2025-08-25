@@ -49,6 +49,7 @@ jobs:
           cp assets/js/main.js static/assets/js/
           cp assets/js/fireworks.js static/assets/js/
           cp assets/json/images.json static/assets/json/
+          cp assets/readme.md static/
 
           # 防止 GitHub Pages 启用 Jekyll 处理
           touch static/.nojekyll
