@@ -2,15 +2,15 @@
 name: Update Bing & Deploy to gh-pages
 
 on:
-  workflow_dispatch:                  # 手动触发
+  workflow_dispatch:
   schedule:
-    - cron: "0 1 * * *"              # 每天 01:00 UTC（北京时间 09:00）
+    - cron: "0 1 * * *"  # 每天 01:00 UTC（北京时间 09:00）
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
     permissions:
-      contents: write                # 允许写入分支
+      contents: write
 
     steps:
       # 1. 检出 main 分支代码
@@ -38,32 +38,32 @@ jobs:
           fi
           echo "✅ Successfully generated images.json"
 
-      # 5. 创建最小化部署目录
-      - name: Prepare deploy directory
+      # 5. 创建静态资源目录（使用 static/）
+      - name: Prepare static directory
         run: |
           # 清理旧目录
-          rm -rf deploy
-          mkdir -p deploy/{assets/css,assets/fonts,assets/img,assets/js,assets/json}
+          rm -rf static
+          mkdir -p static/{assets/css,assets/fonts,assets/img,assets/js,assets/json}
 
           # 复制指定文件
-          cp index.html deploy/
-          cp 404.html deploy/ || true
-          cp favicon.ico deploy/
-          cp apple-touch-icon.png deploy/
+          cp index.html static/
+          cp 404.html static/ || true
+          cp favicon.ico static/
+          cp apple-touch-icon.png static/
 
-          cp assets/css/*.css deploy/assets/css/
-          cp assets/fonts/* deploy/assets/fonts/
-          cp assets/img/logo.png deploy/assets/img/
-          cp assets/js/main.js deploy/assets/js/
-          cp assets/js/fireworks.js deploy/assets/js/
-          cp assets/json/images.json deploy/assets/json/
+          cp assets/css/*.css static/assets/css/
+          cp assets/fonts/* static/assets/fonts/
+          cp assets/img/logo.png static/assets/img/
+          cp assets/js/main.js static/assets/js/
+          cp assets/js/fireworks.js static/assets/js/
+          cp assets/json/images.json static/assets/json/
 
           # 防止 GitHub Pages 启用 Jekyll
-          touch deploy/.nojekyll
+          touch static/.nojekyll
 
           # 验证输出结构
-          echo "📄 Final deploy structure:"
-          find deploy -type f | sort
+          echo "📄 Final static structure:"
+          find static -type f | sort
 
       # 6. 配置 Git 提交者
       - name: Configure Git
@@ -71,35 +71,35 @@ jobs:
           git config --local user.email "github-actions[bot]@users.noreply.github.com"
           git config --local user.name "github-actions[bot]"
 
-      # 7. 部署到 gh-pages 分支（从零创建）
+      # 7. 部署到 gh-pages 分支
       - name: Deploy to gh-pages
         run: |
-          # 创建或切换到 gh-pages 分支
+          # 切换到 gh-pages 分支（不存在则创建）
           git switch -C gh-pages
 
           # 彻底清理当前所有文件（保留 .git）
           git rm -r --cached . 2>/dev/null || true
-          rm -rf * .[^.]* 2>/dev/null || true  # 删除所有文件和隐藏文件（除 .git）
+          rm -rf * .[^.]* 2>/dev/null || true
 
-          # 检查 deploy 目录是否存在
-          if [ ! -d "deploy" ]; then
-            echo "❌ Error: deploy directory does not exist!"
+          # 检查 static 目录是否存在
+          if [ ! -d "static" ]; then
+            echo "❌ Error: static directory does not exist!"
             exit 1
           fi
 
-          # 将 deploy 内容复制到根目录
-          cp -r deploy/* .
+          # 将 static 内容复制到根目录
+          cp -r static/* .
 
-          # 删除 deploy 文件夹本身
-          rm -rf deploy
+          # 删除 static 文件夹本身
+          rm -rf static
 
-          # 添加所有文件（包括 .nojekyll）
+          # 添加所有文件
           git add .
 
-          # 提交更改（使用 [skip ci] 防止循环触发）
+          # 提交（跳过 CI，防止循环）
           git commit -m "[skip ci] 🖼️ Auto-update Bing images and deploy"
 
-          # 推送到远程 gh-pages 分支（自动创建）
+          # 推送到 gh-pages
           git push "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git" gh-pages
 
       # 8. （可选）清理旧 workflow runs
