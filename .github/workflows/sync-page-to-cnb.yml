@@ -1,11 +1,10 @@
-name: Sync page branch to CNB (force push)
+# .github/workflows/sync-page-to-cnb.yml
+name: 🌐 Sync Page Branch to CNB (Auto Deploy)
 
 on:
-  schedule:
-    - cron: '0 4 * * *'  # 每天 UTC 4:00 = 北京时间 12:00（中午）
   push:
     branches:
-      - page   # 只在 page 分支有新提交时触发
+      - page   # 当 page 分支有新提交时自动触发
   workflow_dispatch:
     inputs:
       reason:
@@ -18,49 +17,55 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout page branch
+      # 🔍 1. 检出 page 分支内容
+      - name: 📥 Checkout page branch
         uses: actions/checkout@v5
         with:
           ref: page
           token: ${{ secrets.GITHUB_TOKEN }}
           fetch-depth: 0
 
-      - name: Check if there are changes
+      # 🔍 2. 检测是否有实际变更（避免无意义推送）
+      - name: 🔎 Check for changes
         id: check
         run: |
           CHANGES=$(git diff --name-only HEAD~1 HEAD)
           if [ -z "$CHANGES" ]; then
-            echo "No changes since last commit, skip sync."
+            echo "✅ No changes detected since last commit. Skipping sync."
             echo "skip=true" >> $GITHUB_OUTPUT
           else
-            echo "Changes detected:"
+            echo "✨ Changes detected:"
             echo "$CHANGES"
             echo "skip=false" >> $GITHUB_OUTPUT
           fi
 
-      - name: Push to CNB (force update)
+      # 🚀 3. 推送到 CNB（仅当有变更时执行）
+      - name: 🚀 Push to CNB & Trigger Deployment
         if: steps.check.outputs.skip == 'false'
         env:
           CNB_USERNAME: ${{ secrets.CNB_USERNAME }}
           CNB_TOKEN: ${{ secrets.CNB_TOKEN }}
         run: |
-          # 清理旧的 .git 目录（避免冲突）
+          echo "🧹 Cleaning old Git metadata..."
           rm -rf .git
 
-          # 初始化新的 Git 仓库
+          echo "🌱 Initializing new Git repository..."
           git init
           git config --global user.name 'GitHub Action'
           git config --global user.email 'action@github.com'
 
-          # 添加所有文件并提交
+          echo "💾 Adding all files..."
           git add .
+
+          echo "📝 Committing with timestamp..."
           git commit -m "⚡ Sync from GitHub page branch: $(date +'%%Y-%%m-%%d %%H:%%M:%%S')"
 
-          # 设置远程仓库（CNB 仓库地址）
+          echo "🔗 Setting remote to CNB repository..."
           git remote add origin "https://${{ secrets.CNB_USERNAME }}:${{ secrets.CNB_TOKEN }}@cnb.cool/wojack/AhHui-Homepage.git"
 
-          # 强制推送至 main 分支（CNB 默认主分支）
+          echo "🚀 Forcing push to main branch on CNB..."
           git branch -M main
           git push --force --quiet origin main
 
-          echo "✅ Successfully pushed to CNB repository: wojack/AhHui-Homepage"
+          echo "🎉 Successfully pushed to CNB: wojack/AhHui-Homepage"
+          echo "🌐 Website will auto-deploy at: https://home.gyhwd.top"
