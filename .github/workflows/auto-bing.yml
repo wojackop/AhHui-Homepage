@@ -74,10 +74,3 @@ jobs:
           # 使用 [skip ci] 防止 gh-pages 推送再次触发 CI
           git commit -m "[skip ci] 🖼️ Auto-update Bing images and deploy"
           git push --force "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git" gh-pages
-
-      # 7. （可选）清理旧 workflow runs，节省空间
-      - name: 🧹 Delete old workflow runs
-        uses: Mattraks/delete-workflow-runs@v2
-        with:
-          retain_days: 14        # 保留最近 14 天
-          keep_minimum_runs: 3   # 至少保留 3 次运行记录
