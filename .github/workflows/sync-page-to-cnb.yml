@@ -69,7 +69,7 @@ jobs:
           git commit -m "⚡ Sync from GitHub page branch: $(date +'%%Y-%%m-%%d %%H:%%M:%%S')"
 
           echo "🔗 Setting remote to CNB repository..."
-          git remote add origin "https://${{ secrets.CNB_USERNAME }}:${{ secrets.CNB_TOKEN }}@cnb.cool/wojack/AhHui-Homepage.git"
+          git remote add origin "https://${{ secrets.CNB_USERNAME }}:${{ secrets.CNB_TOKEN }}@cnb.cool/gyhwd.top/AhHui-Homepage.git"
 
           echo "🚀 Forcing push to main branch on CNB (default deployment branch)..."
           git branch -M main
