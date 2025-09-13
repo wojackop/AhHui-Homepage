@@ -1,4 +1,4 @@
-# .github/workflows/auto-bing.yml
+# .github/workflows/generate-static-site.yml
 name: Update Bing & Deploy to page
 
 # 触发方式：
