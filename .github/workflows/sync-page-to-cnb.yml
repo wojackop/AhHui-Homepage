@@ -1,5 +1,5 @@
 # .github/workflows/sync-page-to-cnb.yml
-name: 🌐 Sync Page Branch to CNB (Auto Deploy)
+name: Sync Page Branch to CNB
 
 on:
   push:
