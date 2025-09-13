@@ -1,0 +1,66 @@
+name: Sync page branch to CNB (force push)
+
+on:
+  schedule:
+    - cron: '0 4 * * *'  # 每天 UTC 4:00 = 北京时间 12:00（中午）
+  push:
+    branches:
+      - page   # 只在 page 分支有新提交时触发
+  workflow_dispatch:
+    inputs:
+      reason:
+        description: 'Manual trigger reason'
+        required: false
+        default: 'Manual run'
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout page branch
+        uses: actions/checkout@v5
+        with:
+          ref: page
+          token: ${{ secrets.GITHUB_TOKEN }}
+          fetch-depth: 0
+
+      - name: Check if there are changes
+        id: check
+        run: |
+          CHANGES=$(git diff --name-only HEAD~1 HEAD)
+          if [ -z "$CHANGES" ]; then
+            echo "No changes since last commit, skip sync."
+            echo "skip=true" >> $GITHUB_OUTPUT
+          else
+            echo "Changes detected:"
+            echo "$CHANGES"
+            echo "skip=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Push to CNB (force update)
+        if: steps.check.outputs.skip == 'false'
+        env:
+          CNB_USERNAME: ${{ secrets.CNB_USERNAME }}
+          CNB_TOKEN: ${{ secrets.CNB_TOKEN }}
+        run: |
+          # 清理旧的 .git 目录（避免冲突）
+          rm -rf .git
+
+          # 初始化新的 Git 仓库
+          git init
+          git config --global user.name 'GitHub Action'
+          git config --global user.email 'action@github.com'
+
+          # 添加所有文件并提交
+          git add .
+          git commit -m "⚡ Sync from GitHub page branch: $(date +'%%Y-%%m-%%d %%H:%%M:%%S')"
+
+          # 设置远程仓库（CNB 仓库地址）
+          git remote add origin "https://${{ secrets.CNB_USERNAME }}:${{ secrets.CNB_TOKEN }}@cnb.cool/wojack/AhHui-Homepage.git"
+
+          # 强制推送至 main 分支（CNB 默认主分支）
+          git branch -M main
+          git push --force --quiet origin main
+
+          echo "✅ Successfully pushed to CNB repository: wojack/AhHui-Homepage"
