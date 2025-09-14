@@ -75,21 +75,21 @@
 
 ### 🌐 CNB + 服务器部署配置
 
-#### 1. 配置 CNB 仓库
+1. **配置 CNB 仓库**
 
 - 登录 [CNB 控制台](https://cnb.cool/)
 - 创建仓库：`gyhwd.top/AhHui-Homepage.git`
 
-#### 2. 创建 CNB 访问令牌（PAT）
+2. **创建 CNB 访问令牌（PAT）**
 
 在 CNB → 安全设置 → 访问令牌，创建一个带以下权限的 Token：
 - `repo-code`
 - `repo-contents`
 - `repo-cnb-trigger`
 
-#### 3. 配置服务器 SSH 密钥
+3. **配置服务器 SSH 密钥**
 
-- 在服务器上生成 SSH 密钥对，将公钥 `~/.ssh/gh-cnb.pub` 添加至服务器的 `~/.ssh/authorized_keys`
+在服务器上生成 SSH 密钥对，将公钥 `~/.ssh/gh-cnb.pub` 添加至服务器的 `~/.ssh/authorized_keys`
 
 ```bash
 # 生成无密码 ED25519 密钥对（推荐）
@@ -105,7 +105,7 @@ chmod 600 ~/.ssh/gh-cnb*
 
 >  若使用 1Panel，可以直接免去上述代码操作，请确保其 SSH 服务已启用“密钥认证”，且端口 22 开放。 
 
-#### ⚙️ GitHub Actions 配置
+4. **GitHub Actions 配置**
 
 进入你的 GitHub 仓库 → `Settings` → `Secrets and variables` → `Actions`，分别添加以下 Secret：
 -  **`CNB_USERNAME`**: 你的 CNB 组织名
@@ -177,7 +177,6 @@ npm publish --access public
 
 # 5️⃣ 【重要】发布成功后，切换回国内镜像源以加速日常开发
 npm config set registry https://mirrors.huaweicloud.com/repository/npm/
-# 或使用淘宝镜像：https://registry.npmmirror.com
 ```
 
 **常见错误**：
