@@ -76,4 +76,18 @@ jobs:
           git push --force --quiet origin main
 
           echo "🎉 Successfully pushed to CNB: wojack/AhHui-Homepage"
-          echo "🌐 Website will auto-deploy at: https://home.gyhwd.top"
+
+      # 👇 新增：发送事件触发服务器部署
+      - name: 🔔 Trigger server deployment
+        uses: actions/github-script@v7
+        with:
+          script: |
+            await github.rest.repos.createDispatchEvent({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              event_type: 'deploy-to-server',
+              client_payload: {
+                message: 'CNB updated, triggering server sync',
+                commit: context.sha
+              }
+            }) 
