@@ -16,6 +16,7 @@
   <img src="./assets/img/home.gif" alt="Daily Bing Wallpaper" 
        style="width: 100%; max-width: 80%; height: auto;" />
 </p>
+
 一个简洁、美观的个人主页，灵感源自 [dmego](https://github.com/dmego) 的 [dmego-home-page](https://github.com/dmego/dmego-home-page) 项目。基于 GitHub Actions，每日上午 9 点（北京时间）自动抓取必应（Bing）高清壁纸，生成 `assets/json/images.json` 文件，由 `index.html` 通过 `JSONP` 方式加载并执行 `getBingImages` 函数，动态设置最新背景图，
 
 **原基于 GitHub Pages，现已全面升级为全自动、低延迟、高可用的国产化部署方案：**
