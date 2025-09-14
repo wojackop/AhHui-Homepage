@@ -116,10 +116,8 @@ chmod 600 ~/.ssh/gh-cnb*
 -  **`SERVER_SSH_KEY`**: **私钥内容**（完整复制，含 `-----BEGIN...-----END-----`）
 
 最终完整的 `Actions secrets`  如下：
-<p style="text-align: center; margin: 0; padding: 0;">
-  <img src="./assets/img/Actions secrets.webp" alt="Actions secrets配置" 
-       style="width: 100%; max-width: 100%; height: auto;" />
-</p>
+
+![Actions secrets配置](./assets/img/Actions secrets.webp)
 
 ### 🎀 NPM 包发布与使用
 
