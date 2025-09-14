@@ -1,5 +1,5 @@
 # .github/workflows/deploy-to-server.yml
-name: 🚀 Deploy CNB Content to Server (Auto via Event)
+name: Deploy CNB Content to Server (Auto via Event)
 
 on:
   repository_dispatch:
