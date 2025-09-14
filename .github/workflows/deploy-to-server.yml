@@ -34,7 +34,7 @@ jobs:
 
             echo "🔗 Cloning CNB repository into temporary directory..."
             git clone --depth 1 \
-              "https://${{ secrets.CNB_USERNAME }}:${{ secrets.CNB_TOKEN }}@cnb.cool/gyhwd.top/1panel-appstore.git" \
+              "https://${{ secrets.CNB_USERNAME }}:${{ secrets.CNB_TOKEN }}@cnb.cool/gyhwd.top/AhHui-Homepage.git" \
               "$TEMP_DIR"
 
             echo "📂 Clearing target directory..."
