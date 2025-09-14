@@ -22,7 +22,6 @@ jobs:
           host: ${{ secrets.SERVER_IP }}
           username: ${{ secrets.SERVER_USERNAME }}
           key: ${{ secrets.SERVER_SSH_KEY }}       # 私钥内容（完整 PEM 格式）
-          passphrase: ${{ secrets.PASSPHRASE }}
           port: ${{ secrets.SERVER_PORT || 22 }}   # 默认 22，可不填
           script: |
             # 设置变量
