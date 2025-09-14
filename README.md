@@ -120,6 +120,7 @@ chmod 600 ~/.ssh/gh-cnb*
   <img src="./assets/img/Actions secrets.webp" alt="Actions secrets配置" 
        style="width: 100%; max-width: 100%; height: auto;" />
 </p>
+
 ### 🎀 NPM 包发布与使用
 
 将网站的静态资源（CSS, JS, 图片, 字体等）打包发布为一个 NPM 包，使用 UNPKG 作为资源文件的 CDN。以下是详细步骤：
@@ -158,7 +159,6 @@ chmod 600 ~/.ssh/gh-cnb*
 
 - **`name`**: 建议使用作用域格式 `@username/package-name`。
 - **`files`**: 精确列出要发布的静态资源文件夹。
-
 
 2.  **发布 NPM 包流程**
 
