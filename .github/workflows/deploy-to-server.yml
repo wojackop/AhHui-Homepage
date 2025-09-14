@@ -1,0 +1,56 @@
+# .github/workflows/deploy-to-server.yml
+name: 🚀 Deploy CNB Content to Server (Auto via Event)
+
+on:
+  repository_dispatch:
+    types: [deploy-to-server]  # 监听来自其他工作流的自定义事件
+  workflow_dispatch:           # 保留手动触发能力（调试用）
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      # 🔍 1. 检出当前仓库（用于获取 secrets）
+      - name: 📥 Checkout repository
+        uses: actions/checkout@v5
+
+      # 🚀 2. 使用 SSH 连接服务器并部署
+      - name: 🖥️ Deploy to server via SSH
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.SERVER_IP }}
+          username: ${{ secrets.SERVER_USERNAME }}
+          key: ${{ secrets.SERVER_SSH_KEY }}       # 私钥内容（完整 PEM 格式）
+          port: ${{ secrets.SERVER_PORT || 22 }}   # 默认 22，可不填
+          script: |
+            # 设置变量
+            TARGET_DIR="/opt/1panel/www/sites/home.gyhwd.top/index"
+            TEMP_DIR="/tmp/cnb-deploy"
+
+            echo "🧹 Cleaning old temporary directory..."
+            rm -rf "$TEMP_DIR"
+            mkdir -p "$TEMP_DIR"
+
+            echo "🔗 Cloning CNB repository into temporary directory..."
+            git clone --depth 1 \
+              "https://${{ secrets.CNB_USERNAME }}:${{ secrets.CNB_TOKEN }}@cnb.cool/gyhwd.top/1panel-appstore.git" \
+              "$TEMP_DIR"
+
+            echo "📂 Clearing target directory..."
+            rm -rf "$TARGET_DIR"/*
+            mkdir -p "$TARGET_DIR"
+
+            echo "🔄 Copying CNB content to server site directory (flattened)..."
+            cp -r "$TEMP_DIR"/* "$TARGET_DIR/"
+
+            echo "🗑️ Cleaning up temporary directory..."
+            rm -rf "$TEMP_DIR"
+
+            echo "✅ Successfully deployed! Files synced to: $TARGET_DIR"
+            ls -la "$TARGET_DIR"  # Output final structure for debugging
+
+            # （可选）重启 Nginx（如果需要）
+            # systemctl reload nginx
+
+            echo "🌐 Website will auto-deploy at: https://home.gyhwd.top"
