@@ -1,6 +1,6 @@
 {
   "name": "@wojackop/homepage",
-  "version": "1.0.7",
+  "version": "1.0.8",
   "description": "A personal homepage for AhHui, featuring daily Bing wallpapers and dynamic effects.",
   "main": "index.html",
   "scripts": {
