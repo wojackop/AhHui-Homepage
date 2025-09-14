@@ -16,8 +16,11 @@
   <img src="./assets/img/home.gif" alt="Daily Bing Wallpaper" 
        style="width: 100%; max-width: 80%; height: auto;" />
 </p>
+一个简洁、美观的个人主页，灵感源自 [dmego](https://github.com/dmego) 的 [dmego-home-page](https://github.com/dmego/dmego-home-page) 项目。基于 GitHub Actions，每日上午 9 点（北京时间）自动抓取必应（Bing）高清壁纸，生成 `assets/json/images.json` 文件，由 `index.html` 通过 `JSONP` 方式加载并执行 `getBingImages` 函数，动态设置最新背景图，
 
-一个简洁、美观的个人主页，灵感源自 [dmego](https://github.com/dmego) 的 [dmego-home-page](https://github.com/dmego/dmego-home-page) 项目。基于 GitHub Actions，每日上午 9 点（北京时间）自动抓取必应（Bing）高清壁纸，生成 `assets/json/images.json` 文件，由 `index.html` 通过 `JSONP` 方式加载并执行 `getBingImages` 函数，动态设置最新背景图，最后将整理好的静态资源发布至 `gh-pages` 分支，通过 GitHub Pages 实现自动部署与展示。
+**原基于 GitHub Pages，现已全面升级为全自动、低延迟、高可用的国产化部署方案：**
+
+> 🌐 **GitHub Actions → `page` 分支 → 腾讯云 CNB → SSH 同步至自建服务器 (`home.gyhwd.top`)**
 
 ## ✨ 功能亮点
 
@@ -26,12 +29,19 @@
 - ⚡ **轻量高效**：移除了 jQuery 依赖，使用原生 JavaScript，加载更快。
 - 🎨 **鼠标特效**：集成鼠标点击爆炸五颜六色特效，增加互动乐趣。
 
+- 🚀 **全新部署架构**（✨ 核心升级）：
+  - ✅ 每日生成的静态资源推送至 `page` 分支
+  - ✅ **腾讯云 CNB 自动拉取 `page` 分支并构建**
+  - ✅ **通过 SSH 自动同步至本人服务器 `/opt/1panel/www/sites/home.gyhwd.top/index`**
+
 ## 📦 文件结构
 
 ```markdown
 ├─📁 .github/
 │   └─📁 workflows/
-│       └─📄 auto-bing.yml             # GitHub Actions 定时任务配置（每天凌晨1点更新Bing壁纸）
+│       ├─📄 generate-static-site.yml     # 构建并推送至 page 分支
+│       ├─📄 sync-page-to-cnb.yml   # 监听 page 分支变更 → 推送至 CNB 的 main 分支
+│       ├─📄 deploy-to-server.yml   # 监听 CNB 更新 → SSH 同步至服务器
 ├─📁 assets/
 │   ├─📁 css/
 │   │   ├─📄 footer-style.css         # 网站页脚样式表
@@ -63,16 +73,54 @@
 
 ## 🎉 配置教程
 
-### ⚙️ GitHub Actions 配置
+### 🌐 CNB + 服务器部署配置
 
-- 利用 `Github Action` 提交代码需要一个 `GitHub API` 令牌, 可以在 [Create Tokens](https://github.com/settings/tokens) 这个地址，点击 `Generate new token` 按钮来创建
-  - `Expiration` 过期时间设置为 `No expiration`
-  - `Select scopes` 勾选 `repo`
-  - 点击 `Generate Token` 生成
-- 在仓库的 `Settings` ——>`Secrets` 功能栏中，点击 `New repository secrets` 按钮
-  -  在 `Name` 框中填写 `GH_TOKEN`
-  -  在 `Secrets` 栏中填写第一步生成的 `Token` 值
-- 详细配置步骤图可以参考《[GitHub Action 配置详细步骤](./ActionNotes.md)》文档
+#### 1. 配置 CNB 仓库
+
+- 登录 [CNB 控制台](https://cnb.cool/)
+- 创建仓库：`gyhwd.top/AhHui-Homepage.git`
+
+#### 2. 创建 CNB 访问令牌（PAT）
+
+在 CNB → 安全设置 → 访问令牌，创建一个带以下权限的 Token：
+- `repo-code`
+- `repo-contents`
+- `repo-cnb-trigger`
+
+#### 3. 配置服务器 SSH 密钥
+
+- 在服务器上生成 SSH 密钥对，将公钥 `~/.ssh/gh-cnb.pub` 添加至服务器的 `~/.ssh/authorized_keys`
+
+```bash
+# 生成无密码 ED25519 密钥对（推荐）
+ssh-keygen -t ed25519 -f ~/.ssh/gh-cnb -N ""
+
+# 将公钥添加至 authorized_keys
+cat ~/.ssh/gh-cnb.pub >> ~/.ssh/authorized_keys
+
+# 设置严格权限（必须！）
+chmod 600 ~/.ssh/authorized_keys
+chmod 600 ~/.ssh/gh-cnb*
+```
+
+>  若使用 1Panel，可以直接免去上述代码操作，请确保其 SSH 服务已启用“密钥认证”，且端口 22 开放。 
+
+#### ⚙️ GitHub Actions 配置
+
+进入你的 GitHub 仓库 → **Settings → Secrets and variables → Actions**，分别添加以下 Secret：
+-  **`CNB_USERNAME`**: 你的 CNB 组织名
+-  **`CNB_TOKEN`**: 上述生成的访问令牌
+-  **`SERVER_IP`**: 服务器公网 IP
+-  **`SERVER_USERNAME`**: 登录用户名（如 `root`）
+-  **`SERVER_SSH_KEY`**: **私钥内容**（完整复制，含 `-----BEGIN...-----END-----`）
+
+最终完整的 `Actions secrets`  如下：
+<p style="text-align: center; margin: 0; padding: 0;">
+  <img src="./assets/img/Actions secrets.webp" alt="Actions secrets配置" 
+       style="width: 100%; max-width: 90%; height: auto;" />
+</p>
+> ✅ 所有流程自动化完成：
+> `page` 分支更新 → CNB 构建 → SSH 同步 → 服务器部署 → `home.gyhwd.top` 即刻生效！ 
 
 ### 🎀 NPM 包发布与使用
 
@@ -159,12 +207,13 @@ npm cache clean --force     # 清理 npm 缓存
 1. **触发运行**：每天 01:00 UTC（北京时间 09:00）自动执行，支持手动触发。
 2. **获取壁纸数据**：`bing.js` 调用 Bing API，获取最近 8 天的高清壁纸信息。
 3. **生成 JSONP 文件**：将数据转换为 `getBingImages([...])` 格式，写入 `assets/json/images.json`。
-4. **构建静态资源并部署到 gh-pages**：在 `static/` 中初始化 Git，创建 `gh-pages` 分支，强制推送以更新 GitHub Pages。
-5. **清理历史记录**：自动删除 14 天前的 workflow 运行记录，保留至少 3 次。
+4. **构建并推送至 `page` 分支**：在 `static/` 中初始化 Git，创建 `pages` 分支，强制推送以更新 GitHub Pages。
+5. **同步至 CNB**：`sync-page-to-cnb.yml` 检测 `page` 变更 → 自动推送至 CNB 的 `main` 分支。
 6. **前端加载**：`index.html` 加载 `images.json`，执行 `getBingImages` 函数，设置最新背景图。
 
-
 ## 📝 更新记录
+
+* **2025-09-14**: ✅ **重大升级：全面迁移至 CNB + 自建服务器架构，告别 GitHub Pages，访问速度大幅提升！**
 
 - **2023-08-28**: 将壁纸地址从 `www.bing.com` 换成 `cn.bing.com`，确保在中国大陆也能正常访问。
 - **2022-06-10**: 发布 NPM 包，使用 UNPKG 作为资源文件的 CDN。
