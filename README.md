@@ -107,7 +107,7 @@ chmod 600 ~/.ssh/gh-cnb*
 
 #### ⚙️ GitHub Actions 配置
 
-进入你的 GitHub 仓库 → **Settings → Secrets and variables → Actions**，分别添加以下 Secret：
+进入你的 GitHub 仓库 → `Settings` → `Secrets and variables` → `Actions`，分别添加以下 Secret：
 -  **`CNB_USERNAME`**: 你的 CNB 组织名
 -  **`CNB_TOKEN`**: 上述生成的访问令牌
 -  **`SERVER_IP`**: 服务器公网 IP
@@ -117,11 +117,8 @@ chmod 600 ~/.ssh/gh-cnb*
 最终完整的 `Actions secrets`  如下：
 <p style="text-align: center; margin: 0; padding: 0;">
   <img src="./assets/img/Actions secrets.webp" alt="Actions secrets配置" 
-       style="width: 100%; max-width: 90%; height: auto;" />
+       style="width: 100%; max-width: 100%; height: auto;" />
 </p>
-> ✅ 所有流程自动化完成：
-> `page` 分支更新 → CNB 构建 → SSH 同步 → 服务器部署 → `home.gyhwd.top` 即刻生效！ 
-
 ### 🎀 NPM 包发布与使用
 
 将网站的静态资源（CSS, JS, 图片, 字体等）打包发布为一个 NPM 包，使用 UNPKG 作为资源文件的 CDN。以下是详细步骤：
@@ -162,7 +159,7 @@ chmod 600 ~/.ssh/gh-cnb*
 - **`files`**: 精确列出要发布的静态资源文件夹。
 
 
-2.  发布 NPM 包流程
+2.  **发布 NPM 包流程**
 
 ```bash
 # 1️⃣ 检查当前 npm 源
