@@ -66,19 +66,19 @@ jobs:
 
       # 6. 部署到 page 分支
       - name: 🚀 Update page branch with new content
-      run: |
-        cd static
+        run: |
+          cd static
 
-        git init
-        git config --global user.name 'GitHub Action'
-        git config --global user.email 'action@github.com'
+          git init
+          git config --global user.name 'GitHub Action'
+          git config --global user.email 'action@github.com'
 
-        git remote add origin "https://${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git"
+          git remote add origin "https://${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git"
 
-        git fetch origin page --depth=1 || true
-        git checkout page || git checkout -b page
+          git fetch origin page --depth=1 || true
+          git checkout page || git checkout -b page
 
-        git add .
-        git commit -m "[skip ci] 🖼️ Auto-update Bing images and deploy $(date +'%%Y-%%m-%%d %%H:%%M:%%S')" --allow-empty
+          git add .
+          git commit -m "[skip ci] 🖼️ Auto-update Bing images and deploy $(date +'%%Y-%%m-%%d %%H:%%M:%%S')" --allow-empty
 
-        git push --force origin page
+          git push --force origin page
