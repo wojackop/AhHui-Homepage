@@ -8,7 +8,7 @@ on:
   workflow_dispatch:
     inputs:
       reason:
-        description: '手动触发原因（如：测试部署或紧急更新）'
+        description: '测试部署'
         required: false
         default: 'Manual run'
 
@@ -25,28 +25,14 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
           fetch-depth: 0  # 获取完整历史记录，确保 git diff 能正常工作
 
-      # 🔍 2. 检测是否有实际变更（兼容首次提交）
-      - name: 🔎 Check for file changes
+      # 🔍 2. 强制部署（不再检查变更）
+      - name: 🔁 Always deploy
         id: check
         run: |
-          # 判断当前是否为首次提交（无父提交）
-          if [ -z "$(git rev-parse --verify HEAD^ 2>/dev/null)" ]; then
-            echo "🆕 First commit detected — assuming changes exist and proceeding."
-            echo "skip=false" >> $GITHUB_OUTPUT
-          else
-            # 获取上一次提交与当前提交之间的文件差异
-            CHANGES=$(git diff --name-only HEAD^ HEAD)
-            if [ -z "$CHANGES" ]; then
-              echo "✅ No changes detected since last commit. Skipping sync."
-              echo "skip=true" >> $GITHUB_OUTPUT
-            else
-              echo "✨ Changes detected:"
-              echo "$CHANGES"
-              echo "skip=false" >> $GITHUB_OUTPUT
-            fi
-          fi
-
-      # 🚀 3. 推送到 CNB（仅当有变更时执行）
+          echo "✅ Page branch updated with new commit. Forcing deployment to CNB."
+          echo "skip=false" >> $GITHUB_OUTPUT
+      
+      # 🚀 3. 推送到 CNB
       - name: 🚀 Push to CNB & Trigger Deployment
         if: steps.check.outputs.skip == 'false'
         env:
@@ -65,19 +51,18 @@ jobs:
           git add .
 
           echo "📝 Committing with timestamp..."
-          # 使用 %% 转义 %，因为 YAML 中 % 是特殊字符
-          git commit -m "⚡ Sync from GitHub page branch: $(date +'%%Y-%%m-%%d %%H:%%M:%%S')"
+          git commit -m "[skip ci] 🖼️ Auto-update Bing images and deploy $(date +'%%Y-%%m-%%d %%H:%%M:%%S')"
 
           echo "🔗 Setting remote to CNB repository..."
           git remote add origin "https://${{ secrets.CNB_USERNAME }}:${{ secrets.CNB_TOKEN }}@cnb.cool/gyhwd.top/AhHui-Homepage.git"
 
-          echo "🚀 Forcing push to main branch on CNB (default deployment branch)..."
+          echo "🚀 Forcing push to main branch on CNB..."
           git branch -M main
           git push --force --quiet origin main
 
           echo "🎉 Successfully pushed to CNB: wojack/AhHui-Homepage"
 
-      # 👇 新增：发送事件触发服务器部署
+      # 4.👇 触发服务器部署
       - name: 🔔 Trigger server deployment
         uses: actions/github-script@v7
         with:
