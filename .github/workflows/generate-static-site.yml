@@ -82,7 +82,7 @@ jobs:
           git add .
           git commit -m "[skip ci] 🖼️ Auto-update Bing images and deploy $(date +'%%Y-%%m-%%d %%H:%%M:%%S')" --allow-empty
 
-          git push --force origin page”
+          git push --force origin page
           
           # 👇 新增：主动触发 sync-page-to-cnb.yml
           echo "✅ Pushed to page branch. Triggering sync to CNB..."
