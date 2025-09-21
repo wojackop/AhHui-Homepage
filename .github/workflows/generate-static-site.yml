@@ -65,12 +65,27 @@ jobs:
           git config --global user.name "GitHub Actions"
 
       # 6. 部署到 page 分支
-      - name: 🚀 Commit and push to page
+      - name: 🚀 Update page branch with new content
         run: |
           cd static
+
+          # 初始化仓库（仅第一次需要，但安全起见每次都初始化）
           git init
-          git checkout -b page
+          git config --global user.name 'GitHub Action'
+          git config --global user.email 'action@github.com'
+
+          # 添加远程仓库（确保能拉取）
+          git remote add origin "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git"
+
+          # 拉取 page 分支（如果存在）
+          git fetch origin page --depth=1 || true
+
+          # 切换到 page 分支（不存在则创建）
+          git checkout page || git checkout -b page
+
+          # 添加并提交所有文件
           git add .
-          # 使用 [skip ci] 防止 page 推送再次触发 CI
-          git commit -m "[skip ci] 🖼️ Auto-update Bing images and deploy"
-          git push --force "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git" page
+          git commit -m "[skip ci] 🖼️ Auto-update Bing images and deploy $(date +'%%Y-%%m-%%d %%H:%%M:%%S')" --allow-empty
+
+          # 推送到 page 分支
+          git push --force origin page
