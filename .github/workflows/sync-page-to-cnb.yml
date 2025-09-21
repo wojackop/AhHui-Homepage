@@ -7,9 +7,8 @@ concurrency:
   cancel-in-progress: true
   
 on:
-  push:
-    branches:
-      - page   # 当 page 分支有新提交时自动触发（由每日壁纸生成脚本推送）
+  repository_dispatch:
+    types: [sync-to-cnb]  # 👈 监听来自 generate-static-site.yml 的事件
   workflow_dispatch:
     inputs:
       reason:
