@@ -1,6 +1,6 @@
 {
   "name": "@wojackop/homepage",
-  "version": "1.0.7",
+  "version": "1.0.9",
   "description": "A personal homepage for AhHui, featuring daily Bing wallpapers and dynamic effects.",
   "main": "index.html",
   "scripts": {
@@ -21,7 +21,7 @@
   "bugs": {
     "url": "https://github.com/wojackop/home.github.io/issues"
   },
-  "homepage": "https://wojackop.github.io/home.github.io/",
+  "homepage": "https://gh.gyhwd.top/",
   "files": [
     "assets/css/",
     "assets/fonts/",

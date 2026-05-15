@@ -1,6 +1,6 @@
-[![Version](https://img.shields.io/github/package-json/v/wojackop/home.github.io)](https://www.npmjs.com/package/@wojackop/homepage)
-[![Website](https://img.shields.io/website-up-down-green-red/https/home.gyhwd.top.svg)](https://wojackop.github.io/home.github.io/)
-[![License](https://img.shields.io/github/license/wojackop/home.github.io.svg)](/LICENSE)
+[![Version](https://img.shields.io/github/package-json/v/wojackop/AhHui-Homepage)](https://www.npmjs.com/package/@wojackop/homepage)
+[![Website](https://img.shields.io/website-up-down-green-red/https/home.gyhwd.top.svg)](https://home.gyhwd.top/)
+[![License](https://img.shields.io/github/license/wojackop/AhHui-Homepage.svg)](/LICENSE)
 [![Say Thanks](https://img.shields.io/badge/Say-Thanks!-1EAEDB.svg)](https://saythanks.io/to/wojackop)
 
 ## 个人主页项目
@@ -117,7 +117,7 @@ chmod 600 ~/.ssh/gh-cnb*
 
 最终完整的 `Actions secrets`  如下：
 
-![Actions secrets配置](./assets/img/Actions secrets.webp)
+![Actions secrets配置](./assets/img/actions.webp)
 
 ### 🎀 NPM 包发布与使用
 
