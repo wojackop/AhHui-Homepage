@@ -1,0 +1,54 @@
+/* 确保整个网页填满浏览器窗口 */
+html, body {
+    height: 100%;
+    margin: 0;
+}
+
+/* 页面主体内容的样式 */
+body {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh; /* 推荐使用 vh 单位 */
+    color: #fff;
+    font-family: Arial, sans-serif;
+    position: relative; /* 避免 fixed 定位冲突 */
+}
+
+.content {
+    flex: 1; /* 主内容区域占满剩余空间 */
+    padding-bottom: 60px; /* 为固定 footer 留出空间 */
+    margin-bottom: 0;
+    padding-bottom: 0;
+    border: none;
+}
+
+/* footer iUp 类的样式 */
+.footer.iUp {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    padding: 10px 0;
+    width: 100%;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    background-color: transparent;
+    border: none;
+    z-index: 1000; /* 确保在顶部 */
+}
+
+.foot-item {
+    margin: 3px 0;
+    font-size: 14px;
+    color: #fff;
+}
+
+.footer.iUp a {
+    color: #624adf;
+    text-decoration: none;
+}
+
+.footer.iUp a:hover {
+    text-decoration: underline;
+}
